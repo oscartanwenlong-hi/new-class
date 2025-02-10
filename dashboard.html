@@ -3,15 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>用户仪表盘</title>
+    <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
-    <h2>欢迎来到 Dashboard</h2>
-    <p id="userInfo">加载中...</p>
+    <div class="container">
+        <h2>欢迎回来！</h2>
+        <div class="card">
+            <p><strong>姓名：</strong> <span id="name">加载中...</span></p>
+            <p><strong>邮箱：</strong> <span id="email">加载中...</span></p>
+            <p><strong>角色：</strong> <span id="role">加载中...</span></p>
+        </div>
+        <button id="logout">退出登录</button>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -30,19 +38,23 @@
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                const userRef = doc(db, "user", user.uid);
-                const userSnap = await getDoc(userRef);
-
-                if (userSnap.exists()) {
-                    const userData = userSnap.data();
-                    document.getElementById("userInfo").innerText = 
-                        `姓名: ${userData.name} \nEmail: ${userData.email} \n角色: ${userData.role}`;
+                const userDoc = await getDoc(doc(db, "user", user.uid));
+                if (userDoc.exists()) {
+                    document.getElementById("name").textContent = userDoc.data().name;
+                    document.getElementById("email").textContent = userDoc.data().email;
+                    document.getElementById("role").textContent = userDoc.data().role;
                 } else {
-                    document.getElementById("userInfo").innerText = "未找到用户信息！";
+                    document.getElementById("name").textContent = "未找到用户信息";
                 }
             } else {
-                window.location.href = "index.html"; // 如果未登录，跳转回登录页
+                window.location.href = "index.html";
             }
+        });
+
+        document.getElementById("logout").addEventListener("click", () => {
+            signOut(auth).then(() => {
+                window.location.href = "index.html";
+            });
         });
     </script>
 </body>
