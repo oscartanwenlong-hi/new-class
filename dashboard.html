@@ -3,36 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>课程主页</title>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"></script>
+    <title>个人主页</title>
 </head>
 <body>
-    <h2>欢迎！</h2>
-    <p>你已成功登录，现在可以查看你的课程。</p>
-    <button onclick="logout()">登出</button>
+    <h1>欢迎来到你的个人主页！🎉</h1>
+    <button id="logout-btn">退出登录</button>
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "你的 Firebase API Key",
-            authDomain: "你的 Firebase 项目域",
-            projectId: "你的 Firebase 项目 ID"
-        };
+    <script type="module">
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
 
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
+        const auth = getAuth();
 
-        function logout() {
-            auth.signOut().then(() => {
-                alert("已登出");
-                window.location.href = "index.html";
+        document.getElementById("logout-btn").addEventListener("click", function () {
+            signOut(auth).then(() => {
+                console.log("退出成功 ✅");
+                window.location.href = "index.html"; // 退出后跳回首页
+            }).catch((error) => {
+                console.error("退出失败 ❌", error.message);
             });
-        }
-
-        auth.onAuthStateChanged(user => {
-            if (!user) {
-                window.location.href = "index.html";
-            }
         });
     </script>
 </body>
