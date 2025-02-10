@@ -7,6 +7,27 @@
     <link rel="stylesheet" href="teacher_dashboard.css">
 </head>
 <body>
+
+    <h2>添加新课程</h2>
+<form id="course-form">
+    <label for="course-title">课程标题:</label>
+    <input type="text" id="course-title" required>
+    
+    <label for="course-content">课程内容:</label>
+    <textarea id="course-content" required></textarea>
+
+    <label for="students">允许访问的学生（输入学生ID, 用逗号分隔）:</label>
+    <input type="text" id="students">
+
+    <button type="submit">添加课程</button>
+</form>
+
+<h2>课程列表</h2>
+<ul id="course-list">
+    <!-- 这里会动态加载课程 -->
+</ul>
+
+
     <div class="container">
         <h2>教师仪表盘</h2>
         <div class="card">
