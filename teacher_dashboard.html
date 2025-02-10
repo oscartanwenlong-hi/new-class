@@ -21,10 +21,11 @@
                 <tr>
                     <th>姓名</th>
                     <th>邮箱</th>
+                    <th>操作</th>
                 </tr>
             </thead>
             <tbody id="student-list">
-                <tr><td colspan="2">加载中...</td></tr>
+                <tr><td colspan="3">加载中...</td></tr>
             </tbody>
         </table>
 
@@ -34,7 +35,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
-        import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBJlO3qAn54oGa1T8Jwhj8O20ZUZeLE4wI",
@@ -81,16 +82,71 @@
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
                 if (data.role === "学生") {
-                    const row = `<tr>
-                        <td>${data.name}</td>
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td><span class="student-name">${data.name}</span> <input type="text" class="edit-name" value="${data.name}" style="display:none;"></td>
                         <td>${data.email}</td>
-                    </tr>`;
-                    studentList.innerHTML += row;
+                        <td>
+                            <button class="edit-btn" data-id="${doc.id}">编辑</button>
+                            <button class="save-btn" data-id="${doc.id}" style="display:none;">保存</button>
+                            <button class="delete-btn" data-id="${doc.id}">删除</button>
+                        </td>
+                    `;
+                    studentList.appendChild(row);
                 }
             });
 
             if (studentList.innerHTML === "") {
-                studentList.innerHTML = "<tr><td colspan='2'>没有学生数据</td></tr>";
+                studentList.innerHTML = "<tr><td colspan='3'>没有学生数据</td></tr>";
+            }
+
+            // **添加事件监听器**
+            document.querySelectorAll(".edit-btn").forEach(button => {
+                button.addEventListener("click", (e) => editStudent(e.target.dataset.id, button));
+            });
+
+            document.querySelectorAll(".save-btn").forEach(button => {
+                button.addEventListener("click", (e) => saveStudent(e.target.dataset.id, button));
+            });
+
+            document.querySelectorAll(".delete-btn").forEach(button => {
+                button.addEventListener("click", (e) => deleteStudent(e.target.dataset.id));
+            });
+        }
+
+        function editStudent(id, button) {
+            const row = button.closest("tr");
+            row.querySelector(".student-name").style.display = "none";
+            row.querySelector(".edit-name").style.display = "inline-block";
+            row.querySelector(".edit-btn").style.display = "none";
+            row.querySelector(".save-btn").style.display = "inline-block";
+        }
+
+        async function saveStudent(id, button) {
+            const row = button.closest("tr");
+            const newName = row.querySelector(".edit-name").value;
+            
+            if (newName.trim() === "") {
+                alert("姓名不能为空！");
+                return;
+            }
+
+            await updateDoc(doc(db, "user", id), {
+                name: newName
+            });
+
+            row.querySelector(".student-name").textContent = newName;
+            row.querySelector(".student-name").style.display = "inline-block";
+            row.querySelector(".edit-name").style.display = "none";
+            row.querySelector(".edit-btn").style.display = "inline-block";
+            row.querySelector(".save-btn").style.display = "none";
+        }
+
+        async function deleteStudent(id) {
+            if (confirm("确定要删除这位学生吗？")) {
+                await deleteDoc(doc(db, "user", id));
+                alert("学生已删除！");
+                loadStudents(); // 重新加载列表
             }
         }
 
