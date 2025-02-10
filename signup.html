@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户注册</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"></script>
+</head>
+<body>
+    <h2>用户注册</h2>
+    <input type="email" id="email" placeholder="输入Email"><br>
+    <input type="password" id="password" placeholder="输入密码"><br>
+    <button onclick="signup()">注册</button>
+    <button onclick="window.location.href='index.html'">返回登录</button>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "你的 Firebase API Key",
+            authDomain: "你的 Firebase 项目域",
+            projectId: "你的 Firebase 项目 ID"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        function signup() {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .then(userCredential => {
+                    alert("注册成功！");
+                    window.location.href = "index.html";
+                })
+                .catch(error => {
+                    alert("注册失败: " + error.message);
+                });
+        }
+    </script>
+</body>
+</html>
