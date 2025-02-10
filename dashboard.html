@@ -8,11 +8,10 @@
 <body>
     <h2>欢迎来到 Dashboard</h2>
     <p id="userInfo">加载中...</p>
-    <button id="logoutButton">退出登录</button>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js";
-        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -29,32 +28,21 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // 监听用户登录状态
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                await loadUserInfo(user.uid);
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
+
+                if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    document.getElementById("userInfo").innerText = 
+                        `姓名: ${userData.name} \nEmail: ${userData.email} \n角色: ${userData.role}`;
+                } else {
+                    document.getElementById("userInfo").innerText = "未找到用户信息！";
+                }
             } else {
-                window.location.href = "index.html"; // 未登录，跳回登录页面
+                window.location.href = "index.html"; // 如果未登录，跳转回登录页
             }
-        });
-
-        async function loadUserInfo(uid) {
-            const userDoc = doc(db, "users", uid);
-            const userSnap = await getDoc(userDoc);
-
-            if (userSnap.exists()) {
-                const userData = userSnap.data();
-                document.getElementById("userInfo").innerText = `姓名: ${userData.name} | 邮箱: ${userData.email} | 年龄: ${userData.age}`;
-            } else {
-                document.getElementById("userInfo").innerText = "未找到用户信息，请联系管理员。";
-            }
-        }
-
-        // 退出登录
-        document.getElementById("logoutButton").addEventListener("click", function () {
-            signOut(auth).then(() => {
-                window.location.href = "index.html";
-            });
         });
     </script>
 </body>
