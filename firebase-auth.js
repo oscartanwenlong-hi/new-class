@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBJlO3qAn54oGa1T8Jwhj8O20ZUZeLE4wI",
@@ -11,39 +11,22 @@ const firebaseConfig = {
     measurementId: "G-51RWYK9K4Q"
 };
 
-// 初始化 Firebase
 const app = initializeApp(firebaseConfig);
-const auth = getAuth();
+const auth = getAuth(app);
 
-// 把函数绑定到 window，确保 HTML 里可以调用
-window.login = function() {
+document.getElementById("loginForm").addEventListener("submit", function (event) {
+    event.preventDefault(); 
+
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-    const messageElement = document.getElementById("message");
 
     signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
-            messageElement.style.color = "green";
-            messageElement.innerText = "✅ 登录成功！";
+            document.getElementById("message").innerText = "登录成功！🎉";
+            console.log("登录成功", userCredential.user);
         })
         .catch((error) => {
-            messageElement.style.color = "red";
-            messageElement.innerText = "❌ 登录失败：" + error.message;
+            document.getElementById("message").innerText = "登录失败：" + error.message;
+            console.error("登录错误", error);
         });
-};
-
-window.register = function() {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    const messageElement = document.getElementById("message");
-
-    createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-            messageElement.style.color = "green";
-            messageElement.innerText = "✅ 注册成功！请登录。";
-        })
-        .catch((error) => {
-            messageElement.style.color = "red";
-            messageElement.innerText = "❌ 注册失败：" + error.message;
-        });
-};
+});
