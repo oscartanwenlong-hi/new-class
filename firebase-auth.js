@@ -1,8 +1,6 @@
-// Import Firebase SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
 
-// Firebase 配置
 const firebaseConfig = {
     apiKey: "AIzaSyBJlO3qAn54oGa1T8Jwhj8O20ZUZeLE4wI",
     authDomain: "my-learning-platform-e2f91.firebaseapp.com",
@@ -17,11 +15,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 
-// 登录函数（不跳转）
-function login() {
+// 把函数绑定到 window，确保 HTML 里可以调用
+window.login = function() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-    const messageElement = document.getElementById("message"); // 获取提示信息元素
+    const messageElement = document.getElementById("message");
 
     signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
@@ -32,10 +30,9 @@ function login() {
             messageElement.style.color = "red";
             messageElement.innerText = "❌ 登录失败：" + error.message;
         });
-}
+};
 
-// 注册函数（不跳转）
-function register() {
+window.register = function() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
     const messageElement = document.getElementById("message");
@@ -49,15 +46,4 @@ function register() {
             messageElement.style.color = "red";
             messageElement.innerText = "❌ 注册失败：" + error.message;
         });
-}
-
-// 退出登录
-function logout() {
-    signOut(auth)
-        .then(() => {
-            alert("已退出登录！");
-        })
-        .catch((error) => {
-            alert(error.message);
-        });
-}
+};
