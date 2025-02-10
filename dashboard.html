@@ -3,25 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>个人主页</title>
+    <title>用户主页</title>
+    <script type="module" src="dashboard.js"></script>
 </head>
 <body>
-    <h1>欢迎来到你的个人主页！🎉</h1>
+    <h1>欢迎来到用户主页！</h1>
+    <p id="user-email">正在加载用户信息...</p>
     <button id="logout-btn">退出登录</button>
-
-    <script type="module">
-        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
-
-        const auth = getAuth();
-
-        document.getElementById("logout-btn").addEventListener("click", function () {
-            signOut(auth).then(() => {
-                console.log("退出成功 ✅");
-                window.location.href = "index.html"; // 退出后跳回首页
-            }).catch((error) => {
-                console.error("退出失败 ❌", error.message);
-            });
-        });
-    </script>
 </body>
 </html>
