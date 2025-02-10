@@ -1,7 +1,8 @@
+// Import Firebase SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
 
-// 🔥 你的 Firebase 配置信息（如果已经初始化，就不用重复添加）
+// Firebase 配置
 const firebaseConfig = {
     apiKey: "AIzaSyBJlO3qAn54oGa1T8Jwhj8O20ZUZeLE4wI",
     authDomain: "my-learning-platform-e2f91.firebaseapp.com",
@@ -16,20 +17,43 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 
-// 监听登录按钮
-document.getElementById("login-btn").addEventListener("click", function () {
+// 登录函数
+function login() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
     signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
-            // 登录成功
-            console.log("登录成功！✅", userCredential.user);
-
-            // **🔥 这里是关键：跳转到 dashboard.html**
-            window.location.href = "dashboard.html";
+            alert("Login successful!");
+            window.location.href = "dashboard.html"; // 跳转到仪表盘
         })
         .catch((error) => {
-            console.error("登录失败 ❌", error.message);
+            alert(error.message);
         });
-});
+}
+
+// 注册函数
+function register() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            alert("Registration successful! You can now login.");
+        })
+        .catch((error) => {
+            alert(error.message);
+        });
+}
+
+// 退出登录函数
+function logout() {
+    signOut(auth)
+        .then(() => {
+            alert("Logged out!");
+            window.location.href = "index.html"; // 退出后返回登录页
+        })
+        .catch((error) => {
+            alert(error.message);
+        });
+}
