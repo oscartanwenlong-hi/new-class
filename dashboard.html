@@ -1,14 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
 </head>
 <body>
-    <h2>Welcome to Dashboard</h2>
-    <button onclick="logout()">Logout</button>
+    <h2>欢迎来到 Dashboard</h2>
+    <p id="userEmail"></p>
+    <button id="logoutButton">退出登录</button>
 
-    <script src="firebase-auth.js"></script>
+    <script>
+        // 获取 localStorage 里的用户邮箱
+        const userEmail = localStorage.getItem("userEmail");
+        
+        if (userEmail) {
+            document.getElementById("userEmail").innerText = `当前登录用户: ${userEmail}`;
+        } else {
+            document.getElementById("userEmail").innerText = "未检测到登录信息，请重新登录。";
+        }
+
+        // 退出登录
+        document.getElementById("logoutButton").addEventListener("click", function () {
+            localStorage.removeItem("userEmail"); // 清除登录信息
+            window.location.href = "index.html"; // 跳转回登录页面
+        });
+    </script>
 </body>
 </html>
