@@ -7,23 +7,54 @@
 </head>
 <body>
     <h2>欢迎来到 Dashboard</h2>
-    <p id="userEmail"></p>
+    <p id="userInfo">加载中...</p>
     <button id="logoutButton">退出登录</button>
 
-    <script>
-        // 获取 localStorage 里的用户邮箱
-        const userEmail = localStorage.getItem("userEmail");
-        
-        if (userEmail) {
-            document.getElementById("userEmail").innerText = `当前登录用户: ${userEmail}`;
-        } else {
-            document.getElementById("userEmail").innerText = "未检测到登录信息，请重新登录。";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBJlO3qAn54oGa1T8Jwhj8O20ZUZeLE4wI",
+            authDomain: "my-learning-platform-e2f91.firebaseapp.com",
+            projectId: "my-learning-platform-e2f91",
+            storageBucket: "my-learning-platform-e2f91.firebasestorage.app",
+            messagingSenderId: "963544469209",
+            appId: "1:963544469209:web:145e652a6f9fc234a7b8c8",
+            measurementId: "G-51RWYK9K4Q"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // 监听用户登录状态
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                await loadUserInfo(user.uid);
+            } else {
+                window.location.href = "index.html"; // 未登录，跳回登录页面
+            }
+        });
+
+        async function loadUserInfo(uid) {
+            const userDoc = doc(db, "users", uid);
+            const userSnap = await getDoc(userDoc);
+
+            if (userSnap.exists()) {
+                const userData = userSnap.data();
+                document.getElementById("userInfo").innerText = `姓名: ${userData.name} | 邮箱: ${userData.email} | 年龄: ${userData.age}`;
+            } else {
+                document.getElementById("userInfo").innerText = "未找到用户信息，请联系管理员。";
+            }
         }
 
         // 退出登录
         document.getElementById("logoutButton").addEventListener("click", function () {
-            localStorage.removeItem("userEmail"); // 清除登录信息
-            window.location.href = "index.html"; // 跳转回登录页面
+            signOut(auth).then(() => {
+                window.location.href = "index.html";
+            });
         });
     </script>
 </body>
