@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课程主页</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"></script>
+</head>
+<body>
+    <h2>欢迎！</h2>
+    <p>你已成功登录，现在可以查看你的课程。</p>
+    <button onclick="logout()">登出</button>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "你的 Firebase API Key",
+            authDomain: "你的 Firebase 项目域",
+            projectId: "你的 Firebase 项目 ID"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        function logout() {
+            auth.signOut().then(() => {
+                alert("已登出");
+                window.location.href = "index.html";
+            });
+        }
+
+        auth.onAuthStateChanged(user => {
+            if (!user) {
+                window.location.href = "index.html";
+            }
+        });
+    </script>
+</body>
+</html>
