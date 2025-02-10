@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教师仪表盘</title>
+    <link rel="stylesheet" href="teacher_dashboard.css">
+</head>
+<body>
+    <div class="container">
+        <h2>欢迎，教师！</h2>
+        <div class="card">
+            <p><strong>姓名：</strong> <span id="name">加载中...</span></p>
+            <p><strong>邮箱：</strong> <span id="email">加载中...</span></p>
+            <p><strong>角色：</strong> <span id="role">教师</span></p>
+        </div>
+        <button onclick="window.location.href='add_course.html'">添加课程</button>
+        <button id="logout">退出登录</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBJlO3qAn54oGa1T8Jwhj8O20ZUZeLE4wI",
+            authDomain: "my-learning-platform-e2f91.firebaseapp.com",
+            projectId: "my-learning-platform-e2f91",
+            storageBucket: "my-learning-platform-e2f91.firebasestorage.app",
+            messagingSenderId: "963544469209",
+            appId: "1:963544469209:web:145e652a6f9fc234a7b8c8",
+            measurementId: "G-51RWYK9K4Q"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDoc = await getDoc(doc(db, "user", user.uid));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    document.getElementById("name").textContent = userData.name;
+                    document.getElementById("email").textContent = userData.email;
+                } else {
+                    document.getElementById("name").textContent = "未找到用户信息";
+                }
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        document.getElementById("logout").addEventListener("click", () => {
+            signOut(auth).then(() => {
+                window.location.href = "index.html";
+            });
+        });
+    </script>
+</body>
+</html>
