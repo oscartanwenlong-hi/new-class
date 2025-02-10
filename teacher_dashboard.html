@@ -4,60 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>教师仪表盘</title>
-    <link rel="stylesheet" href="teacher_dashboard.css">
+    <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
-
-    <h2>添加新课程</h2>
-<form id="course-form">
-    <label for="course-title">课程标题:</label>
-    <input type="text" id="course-title" required>
-    
-    <label for="course-content">课程内容:</label>
-    <textarea id="course-content" required></textarea>
-
-    <label for="students">允许访问的学生（输入学生ID, 用逗号分隔）:</label>
-    <input type="text" id="students">
-
-    <button type="submit">添加课程</button>
-</form>
-
-<h2>课程列表</h2>
-<ul id="course-list">
-    <!-- 这里会动态加载课程 -->
-</ul>
-
-
     <div class="container">
         <h2>教师仪表盘</h2>
-        <div class="card">
-            <p><strong>姓名：</strong> <span id="name">加载中...</span></p>
-            <p><strong>邮箱：</strong> <span id="email">加载中...</span></p>
-            <p><strong>角色：</strong> <span id="role">教师</span></p>
-        </div>
+        
+        <h3>添加课程</h3>
+        <input type="text" id="courseTitle" placeholder="课程标题">
+        <textarea id="courseContent" placeholder="课程内容"></textarea>
+        <input type="text" id="studentsList" placeholder="允许访问的学生ID（逗号分隔）">
+        <button id="addCourse">添加课程</button>
 
-        <h3>学生名单</h3>
-        <table border="1">
-            <thead>
-                <tr>
-                    <th>姓名</th>
-                    <th>邮箱</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody id="student-list">
-                <tr><td colspan="3">加载中...</td></tr>
-            </tbody>
-        </table>
-
-        <button id="logout">退出登录</button>
+        <h3>课程列表</h3>
+        <ul id="courseList"></ul>
     </div>
 
     <script type="module">
+        // 引入 Firebase SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
-        import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
-
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
+        
+        // Firebase 配置
         const firebaseConfig = {
             apiKey: "AIzaSyBJlO3qAn54oGa1T8Jwhj8O20ZUZeLE4wI",
             authDomain: "my-learning-platform-e2f91.firebaseapp.com",
@@ -68,114 +36,48 @@
             measurementId: "G-51RWYK9K4Q"
         };
 
+        // 初始化 Firebase
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
 
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                const userDoc = await getDoc(doc(db, "user", user.uid));
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    document.getElementById("name").textContent = userData.name;
-                    document.getElementById("email").textContent = userData.email;
+        // 监听 "添加课程" 按钮
+        document.getElementById("addCourse").addEventListener("click", async () => {
+            const title = document.getElementById("courseTitle").value;
+            const content = document.getElementById("courseContent").value;
+            const students = document.getElementById("studentsList").value.split(",").map(s => s.trim());
 
-                    // **确保教师才能访问**
-                    if (userData.role !== "教师") {
-                        alert("无权限访问！");
-                        window.location.href = "dashboard.html";
-                    } else {
-                        loadStudents();
-                    }
-                } else {
-                    document.getElementById("name").textContent = "未找到用户信息";
+            if (title && content) {
+                try {
+                    await addDoc(collection(db, "courses"), {
+                        title: title,
+                        content: content,
+                        allowedStudents: students
+                    });
+                    alert("课程添加成功！");
+                    loadCourses(); // 重新加载课程列表
+                } catch (error) {
+                    console.error("添加课程失败:", error);
                 }
             } else {
-                window.location.href = "index.html";
+                alert("请填写完整的课程信息！");
             }
         });
 
-        async function loadStudents() {
-            const studentList = document.getElementById("student-list");
-            studentList.innerHTML = ""; // 清空表格
-
-            const querySnapshot = await getDocs(collection(db, "user"));
+        // 加载课程列表
+        async function loadCourses() {
+            const courseList = document.getElementById("courseList");
+            courseList.innerHTML = "";
+            const querySnapshot = await getDocs(collection(db, "courses"));
             querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                if (data.role === "学生") {
-                    const row = document.createElement("tr");
-                    row.innerHTML = `
-                        <td><span class="student-name">${data.name}</span> <input type="text" class="edit-name" value="${data.name}" style="display:none;"></td>
-                        <td>${data.email}</td>
-                        <td>
-                            <button class="edit-btn" data-id="${doc.id}">编辑</button>
-                            <button class="save-btn" data-id="${doc.id}" style="display:none;">保存</button>
-                            <button class="delete-btn" data-id="${doc.id}">删除</button>
-                        </td>
-                    `;
-                    studentList.appendChild(row);
-                }
-            });
-
-            if (studentList.innerHTML === "") {
-                studentList.innerHTML = "<tr><td colspan='3'>没有学生数据</td></tr>";
-            }
-
-            // **添加事件监听器**
-            document.querySelectorAll(".edit-btn").forEach(button => {
-                button.addEventListener("click", (e) => editStudent(e.target.dataset.id, button));
-            });
-
-            document.querySelectorAll(".save-btn").forEach(button => {
-                button.addEventListener("click", (e) => saveStudent(e.target.dataset.id, button));
-            });
-
-            document.querySelectorAll(".delete-btn").forEach(button => {
-                button.addEventListener("click", (e) => deleteStudent(e.target.dataset.id));
+                const course = doc.data();
+                const li = document.createElement("li");
+                li.textContent = `${course.title} - ${course.allowedStudents.join(", ")}`;
+                courseList.appendChild(li);
             });
         }
 
-        function editStudent(id, button) {
-            const row = button.closest("tr");
-            row.querySelector(".student-name").style.display = "none";
-            row.querySelector(".edit-name").style.display = "inline-block";
-            row.querySelector(".edit-btn").style.display = "none";
-            row.querySelector(".save-btn").style.display = "inline-block";
-        }
-
-        async function saveStudent(id, button) {
-            const row = button.closest("tr");
-            const newName = row.querySelector(".edit-name").value;
-            
-            if (newName.trim() === "") {
-                alert("姓名不能为空！");
-                return;
-            }
-
-            await updateDoc(doc(db, "user", id), {
-                name: newName
-            });
-
-            row.querySelector(".student-name").textContent = newName;
-            row.querySelector(".student-name").style.display = "inline-block";
-            row.querySelector(".edit-name").style.display = "none";
-            row.querySelector(".edit-btn").style.display = "inline-block";
-            row.querySelector(".save-btn").style.display = "none";
-        }
-
-        async function deleteStudent(id) {
-            if (confirm("确定要删除这位学生吗？")) {
-                await deleteDoc(doc(db, "user", id));
-                alert("学生已删除！");
-                loadStudents(); // 重新加载列表
-            }
-        }
-
-        document.getElementById("logout").addEventListener("click", () => {
-            signOut(auth).then(() => {
-                window.location.href = "index.html";
-            });
-        });
+        // 初次加载课程
+        loadCourses();
     </script>
 </body>
 </html>
