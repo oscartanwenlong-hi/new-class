@@ -41,6 +41,12 @@
                 .then((userCredential) => {
                     document.getElementById("message").innerText = "登录成功！🎉";
                     console.log("登录成功", userCredential.user);
+                    
+                    // 存储用户信息到 localStorage
+                    localStorage.setItem("userEmail", userCredential.user.email);
+                    
+                    // 跳转到 dashboard.html
+                    window.location.href = "dashboard.html";
                 })
                 .catch((error) => {
                     document.getElementById("message").innerText = "登录失败：" + error.message;
