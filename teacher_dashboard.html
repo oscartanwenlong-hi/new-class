@@ -4,154 +4,113 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>教师仪表盘</title>
-    <link rel="stylesheet" href="dashboard.css">
-    <style>
-        #studentList {
-            border: 1px solid #ccc;
-            max-height: 150px;
-            overflow-y: auto;
-            display: none;
-            position: absolute;
-            background: white;
-            width: 200px;
-            padding: 5px;
-        }
-        .student-checkbox {
-            display: block;
-            margin: 5px 0;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>教师仪表盘</h2>
-        
-        <h3>添加课程</h3>
-        <input type="text" id="courseTitle" placeholder="课程标题">
-        <textarea id="courseContent" placeholder="课程内容"></textarea>
-
-        <h3>选择允许访问的学生</h3>
-        <input type="text" id="searchStudent" placeholder="搜索学生...">
-        <div id="studentList"></div>
-        <ul id="selectedStudents"></ul>
-
-        <button id="addCourse">添加课程</button>
-
-        <h3>课程列表</h3>
-        <ul id="courseList"></ul>
-    </div>
-
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
+        // ✅ Firebase 配置
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBJlO3qAn54oGa1T8Jwhj8O20ZUZeLE4wI",
             authDomain: "my-learning-platform-e2f91.firebaseapp.com",
             projectId: "my-learning-platform-e2f91",
-            storageBucket: "my-learning-platform-e2f91.firebasestorage.app",
+            storageBucket: "my-learning-platform-e2f91.appspot.com",
             messagingSenderId: "963544469209",
             appId: "1:963544469209:web:145e652a6f9fc234a7b8c8",
             measurementId: "G-51RWYK9K4Q"
         };
 
+        // ✅ 初始化 Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth();
 
-        let students = [];
-
-        // 加载所有学生
-        async function loadStudents() {
-            const querySnapshot = await getDocs(collection(db, "user"));
-            students = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                name: doc.data().name
-            }));
-        }
-
-        // 监听输入框，匹配学生
-        document.getElementById("searchStudent").addEventListener("input", function() {
-            const searchText = this.value.toLowerCase();
-            const studentList = document.getElementById("studentList");
-            studentList.innerHTML = "";
-
-            if (!searchText) {
-                studentList.style.display = "none";
+        // ✅ 确保用户已登录
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                alert("请先登录！");
+                window.location.href = "login.html";
                 return;
             }
 
-            students.forEach(student => {
-                if (student.name.toLowerCase().includes(searchText)) {
-                    const checkbox = document.createElement("input");
-                    checkbox.type = "checkbox";
-                    checkbox.value = student.id;
-                    checkbox.classList.add("student-checkbox");
+            // 检查用户是否是教师
+            const userRef = collection(db, "user");
+            const querySnapshot = await getDocs(userRef);
+            let isTeacher = false;
 
-                    const label = document.createElement("label");
-                    label.textContent = student.name;
-                    label.prepend(checkbox);
-
-                    checkbox.addEventListener("change", function() {
-                        updateSelectedStudents();
-                    });
-
-                    studentList.appendChild(label);
+            querySnapshot.forEach((doc) => {
+                if (doc.id === user.uid && doc.data().role === "教师") {
+                    isTeacher = true;
                 }
             });
 
-            studentList.style.display = studentList.children.length ? "block" : "none";
-        });
-
-        function updateSelectedStudents() {
-            const selectedList = document.getElementById("selectedStudents");
-            selectedList.innerHTML = "";
-
-            document.querySelectorAll(".student-checkbox:checked").forEach(checkbox => {
-                const li = document.createElement("li");
-                li.textContent = students.find(s => s.id === checkbox.value).name;
-                selectedList.appendChild(li);
-            });
-        }
-
-        // 添加课程
-        document.getElementById("addCourse").addEventListener("click", async () => {
-            const title = document.getElementById("courseTitle").value;
-            const content = document.getElementById("courseContent").value;
-            const allowedStudents = [...document.querySelectorAll(".student-checkbox:checked")].map(cb => cb.value);
-
-            if (title && content && allowedStudents.length > 0) {
-                try {
-                    await addDoc(collection(db, "courses"), {
-                        title,
-                        content,
-                        allowedStudents
-                    });
-                    alert("课程添加成功！");
-                    loadCourses();
-                } catch (error) {
-                    console.error("添加课程失败:", error);
-                }
-            } else {
-                alert("请填写完整信息！");
+            if (!isTeacher) {
+                alert("你没有权限访问此页面！");
+                window.location.href = "index.html";
             }
         });
 
-        // 加载课程
+        // ✅ 添加课程
+        window.addCourse = async function () {
+            const courseTitle = document.getElementById("courseTitle").value;
+            const courseContent = document.getElementById("courseContent").value;
+
+            if (!courseTitle || !courseContent) {
+                alert("请输入课程标题和内容！");
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, "courses"), {
+                    title: courseTitle,
+                    content: courseContent,
+                    createdBy: auth.currentUser.uid,
+                    createdAt: new Date()
+                });
+
+                alert("课程添加成功，所有学生都可以访问！");
+                document.getElementById("courseTitle").value = "";
+                document.getElementById("courseContent").value = "";
+            } catch (error) {
+                console.error("添加课程失败: ", error);
+                alert("添加课程失败，请检查权限！");
+            }
+        };
+    </script>
+</head>
+<body>
+    <h1>教师仪表盘</h1>
+    <h2>添加课程</h2>
+
+    <label for="courseTitle">课程标题:</label>
+    <input type="text" id="courseTitle" placeholder="输入课程标题">
+    
+    <label for="courseContent">课程内容:</label>
+    <textarea id="courseContent" placeholder="输入课程内容"></textarea>
+
+    <button onclick="addCourse()">添加课程</button>
+
+    <h2>已发布课程</h2>
+    <ul id="courseList"></ul>
+
+    <script type="module">
+        // ✅ 加载已发布课程
+        import { getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
         async function loadCourses() {
             const courseList = document.getElementById("courseList");
             courseList.innerHTML = "";
-            const querySnapshot = await getDocs(collection(db, "courses"));
 
-            querySnapshot.forEach(doc => {
+            const coursesSnapshot = await getDocs(collection(db, "courses"));
+            coursesSnapshot.forEach((doc) => {
                 const course = doc.data();
                 const li = document.createElement("li");
-                li.textContent = `${course.title} - 允许: ${course.allowedStudents.length} 人`;
+                li.textContent = `📖 ${course.title} - 发布者: ${course.createdBy}`;
                 courseList.appendChild(li);
             });
         }
 
-        // 页面加载时获取学生信息
-        loadStudents();
+        // 页面加载时执行
         loadCourses();
     </script>
 </body>
