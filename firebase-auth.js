@@ -17,41 +17,45 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 
-// 登录函数
+// 登录函数（不跳转）
 function login() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
+    const messageElement = document.getElementById("message"); // 获取提示信息元素
 
     signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
-            alert("Login successful!");
-            window.location.href = "dashboard.html"; // 跳转到仪表盘
+            messageElement.style.color = "green";
+            messageElement.innerText = "✅ 登录成功！";
         })
         .catch((error) => {
-            alert(error.message);
+            messageElement.style.color = "red";
+            messageElement.innerText = "❌ 登录失败：" + error.message;
         });
 }
 
-// 注册函数
+// 注册函数（不跳转）
 function register() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
+    const messageElement = document.getElementById("message");
 
     createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
-            alert("Registration successful! You can now login.");
+            messageElement.style.color = "green";
+            messageElement.innerText = "✅ 注册成功！请登录。";
         })
         .catch((error) => {
-            alert(error.message);
+            messageElement.style.color = "red";
+            messageElement.innerText = "❌ 注册失败：" + error.message;
         });
 }
 
-// 退出登录函数
+// 退出登录
 function logout() {
     signOut(auth)
         .then(() => {
-            alert("Logged out!");
-            window.location.href = "index.html"; // 退出后返回登录页
+            alert("已退出登录！");
         })
         .catch((error) => {
             alert(error.message);
