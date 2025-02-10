@@ -40,9 +40,15 @@
             if (user) {
                 const userDoc = await getDoc(doc(db, "user", user.uid));
                 if (userDoc.exists()) {
-                    document.getElementById("name").textContent = userDoc.data().name;
-                    document.getElementById("email").textContent = userDoc.data().email;
-                    document.getElementById("role").textContent = userDoc.data().role;
+                    const userData = userDoc.data();
+                    document.getElementById("name").textContent = userData.name;
+                    document.getElementById("email").textContent = userData.email;
+                    document.getElementById("role").textContent = userData.role;
+
+                    // **判断角色，跳转到教师页面**
+                    if (userData.role === "教师") {
+                        window.location.href = "teacher_dashboard.html";
+                    }
                 } else {
                     document.getElementById("name").textContent = "未找到用户信息";
                 }
